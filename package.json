@@ -1,0 +1,24 @@
+{
+  "name": "rxpilot",
+  "version": "0.1.0",
+  "description": "AI autopilot agent that reads handwritten prescriptions, checks drug interactions, and keeps the pharmacist in the loop - built with Qwen on Alibaba Cloud",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test:qwen": "node test/test-qwen.js"
+  },
+  "keywords": [
+    "qwen",
+    "alibaba-cloud",
+    "pharmacy",
+    "ai-agent",
+    "hackathon"
+  ],
+  "author": "Mostafa Waly",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "openai": "^4.68.0"
+  }
+}
