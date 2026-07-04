@@ -1,7 +1,13 @@
-// RxPilot - Drug Name Normalization (Phase 3, File 2)
+// RxPilot - Drug Name Normalization (v2)
 // Converts whatever is written on the prescription (brand names,
 // misspellings, salts) into the generic active ingredient, so the
 // interaction engine always compares generics.
+//
+// v2 fix: confidence is now computed as string similarity (Dice
+// coefficient on character bigrams) between the cleaned input and the
+// matched RxNorm concept name. The raw RxNorm "score" field uses an
+// internal relative scale and produced misleading values (e.g. 0.15
+// for a perfect brand match).
 //
 // Strategy (two layers):
 //   1. RxNorm API (US National Library of Medicine - free, no key needed)
@@ -12,6 +18,35 @@
 const { client, TEXT_MODEL } = require('./qwenClient');
 
 const RXNORM_BASE = 'https://rxnav.nlm.nih.gov/REST';
+
+// ---------- String similarity (v2) ----------
+
+function bigrams(str) {
+  const s = str.toLowerCase().replace(/\s+/g, '');
+  const grams = [];
+  for (let i = 0; i < s.length - 1; i++) grams.push(s.slice(i, i + 2));
+  return grams;
+}
+
+// Dice coefficient: 1.0 = identical, 0.0 = nothing in common
+function diceSimilarity(a, b) {
+  const gramsA = bigrams(a);
+  const gramsB = bigrams(b);
+  if (gramsA.length === 0 || gramsB.length === 0) {
+    return a.toLowerCase() === b.toLowerCase() ? 1 : 0;
+  }
+  const counts = new Map();
+  for (const g of gramsA) counts.set(g, (counts.get(g) || 0) + 1);
+  let overlap = 0;
+  for (const g of gramsB) {
+    const c = counts.get(g) || 0;
+    if (c > 0) {
+      overlap++;
+      counts.set(g, c - 1);
+    }
+  }
+  return (2 * overlap) / (gramsA.length + gramsB.length);
+}
 
 // ---------- Layer 1: RxNorm ----------
 
@@ -25,10 +60,19 @@ async function rxnormApproximateMatch(term) {
     data.approximateGroup.candidate &&
     data.approximateGroup.candidate[0];
   if (!candidate || !candidate.rxcui) return null;
-  return {
-    rxcui: candidate.rxcui,
-    score: Number(candidate.score) || 0
-  };
+  return { rxcui: candidate.rxcui };
+}
+
+async function rxnormGetName(rxcui) {
+  const url = RXNORM_BASE + '/rxcui/' + rxcui +
+    '/property.json?propName=RxNorm%20Name';
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const prop = data.propConceptGroup &&
+    data.propConceptGroup.propConcept &&
+    data.propConceptGroup.propConcept[0];
+  return prop ? prop.propValue : null;
 }
 
 async function rxnormGetIngredients(rxcui) {
@@ -84,7 +128,7 @@ async function qwenBrandFallback(term) {
 /**
  * Normalize one drug name to its generic ingredient(s).
  * @param {string} rawName - as written on the prescription (e.g. "Cataflam 50mg")
- * @returns {Promise<object>} { original, generics[], method, confidence, rxcui }
+ * @returns {Promise<object>} { original, generics[], method, confidence, rxcui, matchedName }
  */
 async function normalizeDrug(rawName) {
   // Strip strength/units so RxNorm sees a clean name ("Cataflam 50mg" -> "Cataflam")
@@ -94,30 +138,30 @@ async function normalizeDrug(rawName) {
     .trim();
 
   if (!cleaned) {
-    return { original: rawName, generics: [], method: 'unresolved', confidence: 0, rxcui: null };
+    return {
+      original: rawName, generics: [], method: 'unresolved',
+      confidence: 0, rxcui: null, matchedName: null
+    };
   }
 
   // Layer 1: RxNorm
   try {
     const match = await rxnormApproximateMatch(cleaned);
     if (match) {
+      const matchedName = await rxnormGetName(match.rxcui);
+      // v2: confidence = how close the written name is to what RxNorm matched
+      const confidence = matchedName
+        ? Math.round(diceSimilarity(cleaned, matchedName) * 100) / 100
+        : 0.5;
       const ingredients = await rxnormGetIngredients(match.rxcui);
-      if (ingredients.length > 0) {
-        return {
-          original: rawName,
-          generics: ingredients,
-          method: 'rxnorm',
-          confidence: Math.min(match.score / 100, 1),
-          rxcui: match.rxcui
-        };
-      }
-      // RxNorm found the concept itself (it may already be a generic)
+
       return {
         original: rawName,
-        generics: [cleaned.toLowerCase()],
+        generics: ingredients.length > 0 ? ingredients : [cleaned.toLowerCase()],
         method: 'rxnorm',
-        confidence: Math.min(match.score / 100, 1),
-        rxcui: match.rxcui
+        confidence: confidence,
+        rxcui: match.rxcui,
+        matchedName: matchedName
       };
     }
   } catch (e) {
@@ -133,7 +177,8 @@ async function normalizeDrug(rawName) {
         generics: fallback.generics,
         method: 'qwen_fallback',
         confidence: fallback.confidence,
-        rxcui: null
+        rxcui: null,
+        matchedName: null
       };
     }
   } catch (e) {
@@ -147,7 +192,8 @@ async function normalizeDrug(rawName) {
     generics: [cleaned.toLowerCase()],
     method: 'unresolved',
     confidence: 0,
-    rxcui: null
+    rxcui: null,
+    matchedName: null
   };
 }
 

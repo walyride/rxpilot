@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RxPilot — Pharmacy AI Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rx-green:#0d5c4d;
+  --rx-green-deep:#083f35;
+  --rx-mint:#eef5f2;
+  --rx-ink:#152128;
+  --rx-paper:#ffffff;
+  --rx-line:#d7e4df;
+  --rx-amber:#b45309;
+  --rx-amber-bg:#fef3e2;
+  --rx-red:#b3261e;
+  --rx-red-bg:#fdecea;
+  --rx-ok:#1a7f4b;
+  --rx-ok-bg:#e7f5ec;
+  --rx-muted:#5b6b70;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(21,33,40,.06),0 8px 24px rgba(21,33,40,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;
+  background:var(--rx-mint);
+  color:var(--rx-ink);
+  min-height:100vh;
+}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* ---------- Header ---------- */
+header{
+  background:linear-gradient(135deg,var(--rx-green-deep) 0%,var(--rx-green) 100%);
+  color:#fff;
+  padding:18px 28px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  box-shadow:var(--shadow);
+  position:sticky;top:0;z-index:50;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.rx-mark{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff;color:var(--rx-green);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:700;font-family:'IBM Plex Mono',monospace;
+}
+.brand h1{font-size:20px;font-weight:700;letter-spacing:.3px}
+.brand small{display:block;font-weight:300;opacity:.85;font-size:12px;margin-top:2px}
+.hdr-actions{display:flex;gap:6px;align-items:center}
+nav{display:flex;gap:6px}
+nav button,.lang-btn{
+  background:transparent;border:1px solid rgba(255,255,255,.25);color:#fff;
+  padding:9px 20px;border-radius:10px;font-family:inherit;font-size:14px;
+  cursor:pointer;transition:background .18s,border-color .18s;
+}
+nav button:hover,.lang-btn:hover{background:rgba(255,255,255,.12)}
+nav button.active{background:#fff;color:var(--rx-green-deep);font-weight:600;border-color:#fff}
+nav button:focus-visible,.lang-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.lang-btn{font-family:'IBM Plex Mono',monospace;font-weight:500}
+
+/* ---------- Layout ---------- */
+main{max-width:1180px;margin:0 auto;padding:26px 20px 80px}
+.view{display:none}
+.view.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+
+.grid{display:grid;grid-template-columns:400px 1fr;gap:22px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+.card{
+  background:var(--rx-paper);border:1px solid var(--rx-line);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:22px;
+}
+.card h2{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card h2 .step-tag{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;
+  background:var(--rx-mint);color:var(--rx-green);border:1px solid var(--rx-line);
+  padding:2px 8px;border-radius:6px;
+}
+
+/* ---------- Forms ---------- */
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 6px;color:var(--rx-ink)}
+input[type=text],input[type=number],select,textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--rx-line);border-radius:10px;
+  font-family:inherit;font-size:14px;background:#fff;color:var(--rx-ink);
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--rx-green);outline-offset:1px;border-color:var(--rx-green)}
+.hint{font-size:12px;color:var(--rx-muted);margin-top:4px}
+
+.dropzone{
+  border:2px dashed var(--rx-line);border-radius:var(--radius);
+  padding:26px;text-align:center;cursor:pointer;transition:border-color .18s,background .18s;
+  background:var(--rx-mint);
+}
+.dropzone:hover,.dropzone.drag{border-color:var(--rx-green);background:#e4efe9}
+.dropzone .dz-icon{font-size:34px;margin-bottom:8px}
+.dropzone p{font-size:14px;color:var(--rx-muted)}
+.dropzone strong{color:var(--rx-green)}
+#preview{max-width:100%;border-radius:10px;margin-top:14px;display:none;border:1px solid var(--rx-line)}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 22px;border-radius:11px;border:none;cursor:pointer;
+  font-family:inherit;font-size:15px;font-weight:600;transition:transform .12s,box-shadow .12s,opacity .12s;
+}
+.btn:focus-visible{outline:2px solid var(--rx-ink);outline-offset:2px}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--rx-green);color:#fff;width:100%;margin-top:18px;font-size:16px}
+.btn-primary:hover:not([disabled]){background:var(--rx-green-deep)}
+.btn-ok{background:var(--rx-ok);color:#fff}
+.btn-warn{background:var(--rx-amber);color:#fff}
+.btn-danger{background:var(--rx-red);color:#fff}
+
+/* ---------- Flight strip (signature) ---------- */
+.flight{
+  background:var(--rx-green-deep);border-radius:var(--radius);
+  padding:20px 22px;color:#cfe6de;display:none;
+}
+.flight.on{display:block}
+.flight-title{font-size:12px;letter-spacing:2px;opacity:.7;margin-bottom:14px;font-family:'IBM Plex Mono',monospace}
+.stages{display:flex;align-items:center;gap:0}
+.stage{flex:1;text-align:center;position:relative}
+.stage .dot{
+  width:34px;height:34px;border-radius:50%;margin:0 auto 8px;
+  border:2px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  background:transparent;transition:background .3s,border-color .3s;
+}
+.stage .lbl{font-size:12px;opacity:.65}
+.stage.run .dot{border-color:#ffd479;background:rgba(255,212,121,.12);animation:pulse 1.1s infinite}
+.stage.run .lbl{opacity:1;color:#ffd479}
+.stage.done .dot{border-color:#69d09b;background:rgba(105,208,155,.15)}
+.stage.done .lbl{opacity:.95;color:#9fe4c0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,212,121,.35)}50%{box-shadow:0 0 0 9px rgba(255,212,121,0)}}
+.stage::after{
+  content:'';position:absolute;top:17px;height:2px;background:rgba(255,255,255,.15);
+  width:calc(100% - 44px);
+}
+[dir="ltr"] .stage::after{left:calc(-50% + 22px)}
+[dir="rtl"] .stage::after{right:calc(-50% + 22px)}
+.stage:first-child::after{display:none}
+.stage.done::after{background:rgba(105,208,155,.5)}
+.flight-clock{margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;opacity:.6;text-align:center}
+
+/* ---------- Results ---------- */
+.status-banner{
+  border-radius:var(--radius);padding:18px 22px;margin-bottom:18px;
+  display:flex;align-items:center;gap:14px;border:1px solid transparent;
+}
+.status-banner .st-icon{font-size:30px}
+.status-banner h3{font-size:18px;font-weight:700}
+.status-banner p{font-size:13px;margin-top:3px;opacity:.85}
+.st-BLOCKED{background:var(--rx-red-bg);border-color:#f2c4c1;color:var(--rx-red)}
+.st-NEEDS_REVIEW{background:var(--rx-amber-bg);border-color:#f5d9ad;color:var(--rx-amber)}
+.st-CLEARED{background:var(--rx-ok-bg);border-color:#bfe3cd;color:var(--rx-ok)}
+.st-REJECTED{background:#eef1f2;border-color:var(--rx-line);color:var(--rx-muted)}
+
+.section-title{
+  font-size:13px;font-weight:700;color:var(--rx-muted);
+  letter-spacing:.5px;margin:22px 0 10px;display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--rx-line)}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:12px;color:var(--rx-muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--rx-line)}
+[dir="ltr"] th{text-align:left}
+[dir="rtl"] th{text-align:right}
+td{padding:10px;border-bottom:1px solid var(--rx-mint);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+
+.conf{display:flex;align-items:center;gap:8px;min-width:120px}
+.conf-bar{flex:1;height:6px;border-radius:4px;background:var(--rx-mint);overflow:hidden}
+.conf-fill{height:100%;border-radius:4px;background:var(--rx-ok)}
+.conf.low .conf-fill{background:var(--rx-amber)}
+.conf .mono{font-size:12px;color:var(--rx-muted)}
+
+.chip{
+  display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;
+}
+.chip-rxnorm{background:var(--rx-ok-bg);color:var(--rx-ok)}
+.chip-qwen{background:#e8eefc;color:#2b4bad}
+.chip-unresolved{background:var(--rx-amber-bg);color:var(--rx-amber)}
+.chip-BLOCKED{background:var(--rx-red-bg);color:var(--rx-red)}
+.chip-NEEDS_REVIEW{background:var(--rx-amber-bg);color:var(--rx-amber)}
+.chip-CLEARED{background:var(--rx-ok-bg);color:var(--rx-ok)}
+.chip-REJECTED{background:#eef1f2;color:var(--rx-muted)}
+
+.ix-card{
+  border:1px solid var(--rx-line);border-radius:12px;padding:16px;margin-bottom:12px;
+}
+[dir="ltr"] .ix-card{border-left:4px solid var(--rx-muted)}
+[dir="rtl"] .ix-card{border-right:4px solid var(--rx-muted)}
+[dir="ltr"] .ix-card.sev-contraindicated{border-left-color:var(--rx-red)}
+[dir="rtl"] .ix-card.sev-contraindicated{border-right-color:var(--rx-red)}
+.ix-card.sev-contraindicated{background:var(--rx-red-bg)}
+[dir="ltr"] .ix-card.sev-major{border-left-color:var(--rx-amber)}
+[dir="rtl"] .ix-card.sev-major{border-right-color:var(--rx-amber)}
+.ix-card.sev-major{background:var(--rx-amber-bg)}
+[dir="ltr"] .ix-card.sev-moderate{border-left-color:#2b4bad}
+[dir="rtl"] .ix-card.sev-moderate{border-right-color:#2b4bad}
+.ix-card.sev-moderate{background:#f2f5fd}
+.ix-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;flex-wrap:wrap}
+.ix-drugs{font-weight:700;font-size:15px}
+.ix-sev{font-size:11px;font-weight:700;letter-spacing:1px;font-family:'IBM Plex Mono',monospace}
+.ix-card p{font-size:13px;margin-top:6px;line-height:1.7}
+.ix-card p b{font-weight:600}
+
+.audit{background:var(--rx-ink);border-radius:12px;padding:16px;color:#c9d6da;max-height:260px;overflow:auto}
+.audit-row{display:flex;gap:12px;font-size:12px;padding:5px 0;font-family:'IBM Plex Mono',monospace;direction:ltr;text-align:left}
+.audit-row .t{color:#7fd1b0;white-space:nowrap}
+.audit-row .s{color:#ffd479;white-space:nowrap;min-width:150px}
+
+.decision-bar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.decision-bar .btn{flex:1;min-width:140px}
+#decisionNote{margin-top:12px}
+.decided{
+  margin-top:16px;padding:14px;border-radius:10px;background:var(--rx-mint);
+  font-size:14px;border:1px solid var(--rx-line);
+}
+
+/* ---------- Cases & patients lists ---------- */
+.list-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 16px;border:1px solid var(--rx-line);border-radius:12px;margin-bottom:10px;
+  background:#fff;cursor:pointer;transition:box-shadow .15s,border-color .15s;
+}
+.list-row:hover{box-shadow:var(--shadow);border-color:var(--rx-green)}
+.list-row .meta{font-size:12px;color:var(--rx-muted);margin-top:3px}
+.empty{
+  text-align:center;padding:40px 20px;color:var(--rx-muted);font-size:14px;
+  border:1px dashed var(--rx-line);border-radius:var(--radius);background:#fff;
+}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--rx-ink);color:#fff;padding:12px 22px;border-radius:12px;
+  font-size:14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;
+}
+.toast.show{opacity:1}
+footer{
+  text-align:center;padding:20px;color:var(--rx-muted);font-size:12px;
+}
+footer b{color:var(--rx-green)}
+
+/* ---------- Dispensing outputs ---------- */
+.label-card{
+  border:1.5px solid var(--rx-ink);border-radius:10px;padding:14px 16px;margin-bottom:10px;
+  background:#fff;
+}
+.label-card .lc-drug{font-weight:700;font-size:16px}
+.label-card .lc-row{font-size:13px;margin-top:4px;color:var(--rx-ink)}
+.label-card .lc-row b{font-weight:600;color:var(--rx-muted)}
+.sheet{
+  border:1px solid var(--rx-line);border-radius:12px;padding:20px 22px;background:#fff;
+  direction:rtl;text-align:right;line-height:1.9;font-size:14px;
+}
+.sheet.sheet-en{direction:ltr;text-align:left}
+.mod-box{
+  margin-top:16px;padding:16px;border:1.5px solid var(--rx-amber);
+  border-radius:12px;background:var(--rx-amber-bg);
+}
+.mod-box .mod-title{font-weight:700;font-size:14px;margin-bottom:10px;color:var(--rx-amber)}
+.mod-box table{background:#fff;border-radius:8px}
+.mod-box td{padding:5px}
+.mod-box input{padding:7px 9px;font-size:13px;border-radius:8px}
+.mod-remove{
+  background:var(--rx-red-bg);color:var(--rx-red);border:none;border-radius:8px;
+  width:30px;height:30px;cursor:pointer;font-weight:700;font-size:14px;
+}
+.mod-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.mod-actions .btn{flex:1;min-width:130px;font-size:14px;padding:10px 14px}
+.sheet h4{color:var(--rx-green-deep);margin:14px 0 6px;font-size:15px}
+.sheet h4:first-child{margin-top:0}
+.sheet p{margin:4px 0}
+.outputs-loading{
+  padding:16px;border-radius:10px;background:var(--rx-mint);border:1px dashed var(--rx-line);
+  font-size:14px;color:var(--rx-muted);text-align:center;margin-top:14px;
+}
+#printArea{display:none}
+@page{size:A4;margin:15mm}
+@media print{
+  body *{visibility:hidden}
+  #printArea{display:block!important;visibility:visible;position:absolute;top:0;left:0;right:0}
+  #printArea *{visibility:visible}
+  #printArea{font-family:'IBM Plex Sans Arabic',sans-serif;color:#000;font-size:10.5pt;line-height:1.55;
+    padding:10mm 12mm;box-sizing:border-box}
+  /* Header: brand + patient + date on one compact line */
+  .pr-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    border-bottom:2px solid #000;padding-bottom:5px;margin-bottom:9px}
+  .pr-brand{font-size:14pt;font-weight:700}
+  .pr-meta{font-size:9.5pt}
+  /* THE med table: the hero of the page - big, bold, scannable */
+  .pr-meds{width:100%;border-collapse:collapse;margin-bottom:11px;page-break-inside:avoid}
+  .pr-meds th{border:1.2pt solid #000;padding:5px 8px;font-size:10pt;background:#efefef}
+  .pr-meds td{border:1.2pt solid #000;padding:7px 8px;vertical-align:middle}
+  .pr-meds .pr-drug{font-weight:700;font-size:12pt}
+  .pr-meds .pr-dir{font-size:11pt;font-weight:600}
+  /* Counseling: compact reference below - never splits a section across pages */
+  .pr-sheet h4{font-size:10.5pt;margin:7px 0 3px;padding-bottom:1px;border-bottom:.8pt solid #888;
+    page-break-after:avoid}
+  .pr-sheet p{margin:2px 0;font-size:9.8pt;page-break-inside:avoid}
+  .pr-foot{margin-top:9px;font-size:8.5pt;color:#333;border-top:.8pt solid #888;
+    padding-top:4px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="rx-mark">℞</div>
+    <div>
+      <h1>RxPilot</h1>
+      <small data-i18n="tagline">AI prescription safety — with a clinical pharmacist's eye</small>
+    </div>
+  </div>
+  <div class="hdr-actions">
+    <nav>
+      <button class="active" data-view="new" data-i18n="nav_new" onclick="switchView('new',this)">New Prescription</button>
+      <button data-view="cases" data-i18n="nav_cases" onclick="switchView('cases',this)">Cases</button>
+      <button data-view="patients" data-i18n="nav_patients" onclick="switchView('patients',this)">Patients</button>
+    </nav>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()" aria-label="Switch language">العربية</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= VIEW: NEW PRESCRIPTION ================= -->
+<section id="view-new" class="view active">
+  <div class="grid">
+
+    <div class="card">
+      <h2><span class="step-tag">01</span> <span data-i18n="rx_and_patient">Prescription &amp; Patient</span></h2>
+
+      <label for="patientSelect" data-i18n="patient">Patient</label>
+      <select id="patientSelect">
+        <option value="" data-i18n="no_patient">— No patient profile (check prescription only) —</option>
+      </select>
+      <div class="hint" data-i18n="patient_hint">Selecting a patient checks the prescription against their current medications and allergies from memory.</div>
+
+      <label data-i18n="rx_image">Prescription image</label>
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload prescription image">
+        <div class="dz-icon">📷</div>
+        <p><strong data-i18n="dz_click">Click to choose an image</strong> <span data-i18n="dz_or">or drag it here</span></p>
+        <p class="hint" data-i18n="dz_hint">JPG or PNG — handwriting welcome 😉</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png" hidden>
+      <img id="preview" alt="Prescription preview">
+
+      <button class="btn btn-primary" id="processBtn" disabled onclick="processRx()">
+        <span data-i18n="takeoff">Process prescription</span>
+      </button>
+    </div>
+
+    <div>
+      <div class="flight" id="flight">
+        <div class="flight-title">RXPILOT — LIVE ANALYSIS</div>
+        <div class="stages">
+          <div class="stage" id="stg-vision"><div class="dot">👁️</div><div class="lbl" data-i18n="stg_vision">Reading handwriting</div></div>
+          <div class="stage" id="stg-norm"><div class="dot">🔄</div><div class="lbl" data-i18n="stg_norm">Normalizing names</div></div>
+          <div class="stage" id="stg-safety"><div class="dot">🛡️</div><div class="lbl" data-i18n="stg_safety">Safety checks</div></div>
+          <div class="stage" id="stg-decision"><div class="dot">⚖️</div><div class="lbl" data-i18n="stg_decision">Decision</div></div>
+        </div>
+        <div class="flight-clock" id="flightClock">00.0s</div>
+      </div>
+
+      <div id="resultArea"></div>
+
+      <div class="empty" id="newEmpty" data-i18n="new_empty">
+        Upload a prescription image and watch the analysis run step by step.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= VIEW: CASES ================= -->
+<section id="view-cases" class="view">
+  <div class="card">
+    <h2><span data-i18n="cases_log">Case log</span> <span class="step-tag" id="casesCount">0</span></h2>
+    <div id="casesList"><div class="empty" data-i18n="cases_empty">No cases yet — start with a new prescription.</div></div>
+  </div>
+  <div id="caseDetail" style="margin-top:20px"></div>
+</section>
+
+<!-- ================= VIEW: PATIENTS ================= -->
+<section id="view-patients" class="view">
+  <div class="grid">
+    <div class="card">
+      <h2 data-i18n="add_patient">Add patient</h2>
+      <label for="pName" data-i18n="p_name">Name</label>
+      <input type="text" id="pName" data-i18n-ph="p_name_ph" placeholder="e.g. Ahmed Mohamed">
+      <label for="pAge" data-i18n="p_age">Age</label>
+      <input type="number" id="pAge" placeholder="60">
+      <label for="pMeds" data-i18n="p_meds">Current medications</label>
+      <input type="text" id="pMeds" placeholder="warfarin, metformin">
+      <div class="hint" data-i18n="p_meds_hint">Separate medications with commas.</div>
+      <label for="pAllergies" data-i18n="p_allergies">Allergies</label>
+      <input type="text" id="pAllergies" placeholder="penicillin">
+      <label for="pConditions" data-i18n="p_conditions">Chronic conditions</label>
+      <input type="text" id="pConditions" placeholder="hypertension, CKD">
+      <button class="btn btn-primary" onclick="addPatient()"><span data-i18n="save_patient">Save patient</span></button>
+    </div>
+    <div class="card">
+      <h2><span data-i18n="patient_files">Patient profiles</span> <span class="step-tag" id="patientsCount">0</span></h2>
+      <div id="patientsList"><div class="empty" data-i18n="patients_empty">No patients yet.</div></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span data-i18n="footer_a">RxPilot — interaction rules</span> <b data-i18n="footer_b">clinically reviewed</b> <span data-i18n="footer_c">· built with Qwen on Alibaba Cloud · the final decision always belongs to the pharmacist 🧑‍⚕️</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<div id="printArea" dir="rtl"></div>
+
+<script>
+/* ================= i18n ================= */
+const I18N = {
+  en: {
+    tagline: "AI prescription safety — with a clinical pharmacist's eye",
+    nav_new: "New Prescription", nav_cases: "Cases", nav_patients: "Patients",
+    rx_and_patient: "Prescription & Patient",
+    patient: "Patient",
+    no_patient: "— No patient profile (check prescription only) —",
+    patient_hint: "Selecting a patient checks the prescription against their current medications and allergies from memory.",
+    rx_image: "Prescription image",
+    dz_click: "Click to choose an image", dz_or: "or drag it here",
+    dz_hint: "JPG or PNG — handwriting welcome 😉",
+    takeoff: "Process prescription",
+    stg_vision: "Reading handwriting", stg_norm: "Normalizing names",
+    stg_safety: "Safety checks", stg_decision: "Decision",
+    new_empty: "Upload a prescription image and watch the analysis run step by step.",
+    cases_log: "Case log", cases_empty: "No cases yet — start with a new prescription.",
+    add_patient: "Add patient", p_name: "Name", p_name_ph: "e.g. Ahmed Mohamed",
+    p_age: "Age", p_meds: "Current medications",
+    p_meds_hint: "Separate medications with commas.",
+    p_allergies: "Allergies", p_conditions: "Chronic conditions",
+    save_patient: "Save patient", patient_files: "Patient profiles",
+    patients_empty: "No patients yet.",
+    footer_a: "RxPilot — interaction rules", footer_b: "clinically reviewed",
+    footer_c: "· built with Qwen on Alibaba Cloud · the final decision always belongs to the pharmacist 🧑‍⚕️",
+    st_BLOCKED_t: "Blocked — do not dispense without intervention",
+    st_BLOCKED_s: "A risk was detected that prevents dispensing before the pharmacist's decision.",
+    st_NEEDS_REVIEW_t: "Pharmacist review required",
+    st_NEEDS_REVIEW_s: "The system stopped dispensing at the human verification checkpoint.",
+    st_CLEARED_t: "Clear — ready for approval",
+    st_CLEARED_s: "No interactions or flags. Final approval takes one click.",
+    st_REJECTED_t: "The image is not a prescription",
+    st_REJECTED_s: "Upload a clear prescription image and try again.",
+    sec_read: "What the system read from the prescription",
+    th_drug: "Medication", th_strength: "Strength", th_dose: "Dose",
+    th_freq: "Frequency", th_conf: "Reading confidence",
+    sec_norm: "Name normalization (brand → active ingredient)",
+    th_written: "As written", th_generic: "Active ingredient", th_source: "Source",
+    chip_unresolved: "Unresolved",
+    sec_ix: "Drug interactions — clinically reviewed table",
+    no_ix: "No interactions in the curated table. ✅",
+    sev_contraindicated: "Contraindicated", sev_major: "Major", sev_moderate: "Moderate",
+    lbl_risk: "Risk", lbl_mech: "Mechanism", lbl_action: "Action",
+    sec_allergy: "Conflict with patient allergy", allergy_doc: "Documented allergy",
+    sec_ai: "AI clinical review", lbl_issue: "Finding", lbl_rec: "Recommendation",
+    sec_audit: "Audit trail — every step recorded",
+    sec_decision: "Pharmacist decision — the human checkpoint",
+    note_ph: "Optional note: e.g. diclofenac replaced with paracetamol after contacting the prescriber",
+    btn_approve: "✅ Approve & dispense", btn_modify: "✏️ Approve with modification", btn_reject: "⛔ Reject dispensing",
+    msg_approved: "Approved — patient memory updated with the dispensed medications 🗂️",
+    msg_modified: "Approved with modification — the decision was recorded in the audit trail",
+    msg_rejected: "Dispensing rejected — the decision was recorded in the audit trail",
+    decision_saved: "Pharmacist decision recorded",
+    decision_failed: "Failed to record the decision: ",
+    pharm_decision: "Pharmacist decision",
+    proc_failed_t: "Processing failed",
+    proc_failed_s: " — make sure the server is running, then try again.",
+    load_cases_failed: "Failed to load cases: ",
+    open_case_failed: "Failed to open the case: ",
+    load_patients_failed: "Failed to load patients: ",
+    save_failed: "Failed to save: ",
+    name_required: "Please enter the patient's name first",
+    patient_saved: "Patient saved to memory 🗂️",
+    years: "years",
+    sec_outputs: "Dispensing outputs — label & patient counseling sheet",
+    outputs_loading: "Generating the label and the Arabic counseling sheet...",
+    btn_gen_outputs: "🖨️ Generate label & counseling sheet",
+    lbl_label: "Dispensing label",
+    sheet_title: "Patient counseling sheet",
+    sheet_lang: "Patient counseling sheet language",
+    opt_ar: "العربية (Arabic)", opt_en: "English",
+    btn_print: "🖨️ Print",
+    outputs_failed: "Failed to generate outputs: ",
+    lc_patient: "Patient", lc_directions: "Directions", lc_route: "Route", lc_date: "Date",
+    mod_title: "Edit the final medication list — this exact list will be dispensed, labeled, and counseled",
+    th_duration: "Duration",
+    mod_add: "+ Add medication",
+    mod_confirm: "✅ Confirm final list & dispense",
+    mod_cancel: "Cancel",
+    med_name_required: "Every medication must have a name"
+  },
+  ar: {
+    tagline: "نظام ذكي لسلامة الوصفات — بعين صيدلي إكلينيكي",
+    nav_new: "وصفة جديدة", nav_cases: "الحالات", nav_patients: "المرضى",
+    rx_and_patient: "الوصفة والمريض",
+    patient: "المريض",
+    no_patient: "— بدون ملف مريض (فحص الوصفة فقط) —",
+    patient_hint: "اختيار المريض يتيح فحص الوصفة مقابل أدويته الحالية وحساسياته المخزنة في الذاكرة.",
+    rx_image: "صورة الوصفة الطبية",
+    dz_click: "انقر لاختيار صورة", dz_or: "أو اسحبها إلى هنا",
+    dz_hint: "بصيغة JPG أو PNG — الخط اليدوي مقبول 😉",
+    takeoff: "بدء المعالجة",
+    stg_vision: "قراءة الخط اليدوي", stg_norm: "توحيد الأسماء",
+    stg_safety: "فحوصات الأمان", stg_decision: "القرار",
+    new_empty: "ارفع صورة وصفة طبية وشاهد التحليل يعمل خطوة بخطوة.",
+    cases_log: "سجل الحالات", cases_empty: "لا توجد حالات بعد — ابدأ بوصفة جديدة.",
+    add_patient: "إضافة مريض", p_name: "الاسم", p_name_ph: "مثال: أحمد محمد",
+    p_age: "العمر", p_meds: "الأدوية الحالية",
+    p_meds_hint: "افصل بين الأدوية بفاصلة.",
+    p_allergies: "الحساسية", p_conditions: "الأمراض المزمنة",
+    save_patient: "حفظ المريض", patient_files: "ملفات المرضى",
+    patients_empty: "لا يوجد مرضى بعد.",
+    footer_a: "RxPilot — قواعد التفاعلات", footer_b: "مُراجَعة إكلينيكيًا",
+    footer_c: "· مبني بواسطة Qwen على Alibaba Cloud · القرار النهائي دائمًا للصيدلي 🧑‍⚕️",
+    st_BLOCKED_t: "محظور — لا صرف دون تدخّل",
+    st_BLOCKED_s: "تم رصد خطر يمنع الصرف قبل صدور قرار الصيدلي.",
+    st_NEEDS_REVIEW_t: "مطلوبة مراجعة الصيدلي",
+    st_NEEDS_REVIEW_s: "أوقف النظام الصرف عند نقطة التحقق البشري.",
+    st_CLEARED_t: "سليمة — جاهزة للاعتماد",
+    st_CLEARED_s: "لا توجد تفاعلات أو تنبيهات. الاعتماد النهائي بنقرة واحدة.",
+    st_REJECTED_t: "الصورة ليست وصفة طبية",
+    st_REJECTED_s: "يرجى رفع صورة وصفة واضحة والمحاولة مرة أخرى.",
+    sec_read: "ما قرأه النظام من الوصفة",
+    th_drug: "الدواء", th_strength: "التركيز", th_dose: "الجرعة",
+    th_freq: "التكرار", th_conf: "درجة الثقة في القراءة",
+    sec_norm: "توحيد الأسماء (الاسم التجاري ← المادة الفعالة)",
+    th_written: "كما كُتب", th_generic: "المادة الفعالة", th_source: "المصدر",
+    chip_unresolved: "غير محسوم",
+    sec_ix: "التفاعلات الدوائية — جدول مُراجَع إكلينيكيًا",
+    no_ix: "لا توجد تفاعلات في الجدول المعتمد. ✅",
+    sev_contraindicated: "يُمنع الجمع", sev_major: "خطير", sev_moderate: "متوسط",
+    lbl_risk: "الخطر", lbl_mech: "الآلية", lbl_action: "الإجراء",
+    sec_allergy: "تعارض مع حساسية المريض", allergy_doc: "حساسية موثقة",
+    sec_ai: "المراجعة السريرية بالذكاء الاصطناعي", lbl_issue: "الملاحظة", lbl_rec: "التوصية",
+    sec_audit: "سجل التدقيق — كل خطوة موثقة",
+    sec_decision: "قرار الصيدلي — نقطة التحقق البشري",
+    note_ph: "ملاحظة اختيارية: مثال — استُبدل الديكلوفيناك بالباراسيتامول بعد التواصل مع الطبيب",
+    btn_approve: "✅ اعتماد وصرف", btn_modify: "✏️ اعتماد مع تعديل", btn_reject: "⛔ رفض الصرف",
+    msg_approved: "تم الاعتماد — وتم تحديث ذاكرة المريض بالأدوية المصروفة 🗂️",
+    msg_modified: "تم الاعتماد مع تعديل — وسُجِّل القرار في سجل التدقيق",
+    msg_rejected: "تم رفض الصرف — وسُجِّل القرار في سجل التدقيق",
+    decision_saved: "تم تسجيل قرار الصيدلي",
+    decision_failed: "تعذّر تسجيل القرار: ",
+    pharm_decision: "قرار الصيدلي",
+    proc_failed_t: "تعذّر إتمام المعالجة",
+    proc_failed_s: " — يرجى التأكد من تشغيل الخادم ثم المحاولة مرة أخرى.",
+    load_cases_failed: "تعذّر تحميل الحالات: ",
+    open_case_failed: "تعذّر فتح الحالة: ",
+    load_patients_failed: "تعذّر تحميل المرضى: ",
+    save_failed: "تعذّر الحفظ: ",
+    name_required: "يرجى إدخال اسم المريض أولاً",
+    patient_saved: "تم حفظ المريض في الذاكرة 🗂️",
+    years: "سنة",
+    sec_outputs: "مخرجات الصرف — الملصق ونشرة إرشادات المريض",
+    outputs_loading: "جارٍ إنشاء الملصق ونشرة الإرشادات باللغة العربية...",
+    btn_gen_outputs: "🖨️ إنشاء الملصق ونشرة الإرشادات",
+    lbl_label: "ملصق الصرف",
+    sheet_title: "نشرة إرشادات المريض",
+    sheet_lang: "لغة نشرة إرشادات المريض",
+    opt_ar: "العربية (Arabic)", opt_en: "English",
+    btn_print: "🖨️ طباعة",
+    outputs_failed: "تعذّر إنشاء المخرجات: ",
+    lc_patient: "المريض", lc_directions: "التعليمات", lc_route: "طريقة الاستخدام", lc_date: "التاريخ",
+    mod_title: "عدّل قائمة الأدوية النهائية — هذه القائمة تحديدًا هي التي ستُصرف وتُطبع ملصقاتها ونشرتها",
+    th_duration: "المدة",
+    mod_add: "+ إضافة دواء",
+    mod_confirm: "✅ تأكيد القائمة النهائية والصرف",
+    mod_cancel: "إلغاء",
+    med_name_required: "يجب إدخال اسم لكل دواء"
+  }
+};
+
+let lang = 'en';
+try { lang = localStorage.getItem('rxpilot_lang') || 'en'; } catch(e) {}
+
+function t(key){ return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key; }
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.title = lang === 'ar' ? 'RxPilot — نظام سلامة الوصفات' : 'RxPilot — Pharmacy AI Agent';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
+  const noteEl = document.getElementById('decisionNote');
+  if(noteEl) noteEl.placeholder = t('note_ph');
+  document.getElementById('langBtn').textContent = lang === 'ar' ? 'EN' : 'العربية';
+}
+
+function toggleLang(){
+  lang = lang === 'ar' ? 'en' : 'ar';
+  try { localStorage.setItem('rxpilot_lang', lang); } catch(e) {}
+  applyLang();
+  // Re-render dynamic areas in the new language
+  if(lastResult) document.getElementById('resultArea').innerHTML = renderResult(lastResult, currentCaseId, lastWithDecision);
+  if(document.getElementById('view-cases').classList.contains('active')) loadCases();
+  if(document.getElementById('view-patients').classList.contains('active')) loadPatients();
+}
+
+/* ================= State ================= */
+let imageBase64 = null;
+let imageMime = 'image/jpeg';
+let currentCaseId = null;
+let lastResult = null;
+let lastWithDecision = true;
+let clockTimer = null;
+let stageTimer = null;
+
+/* ================= Helpers ================= */
+const $ = id => document.getElementById(id);
+
+function toast(msg){
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+async function api(path, opts){
+  const res = await fetch(path, opts);
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.details || data.error || ('HTTP '+res.status));
+  return data;
+}
+
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,
+    c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const STATUS_ICON = { BLOCKED:'⛔', NEEDS_REVIEW:'⚠️', CLEARED:'✅', REJECTED:'🚫' };
+
+/* ================= Views ================= */
+function switchView(name, btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  $('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='cases') loadCases();
+  if(name==='patients') loadPatients();
+}
+
+/* ================= Upload ================= */
+const dz = $('dropzone'), fi = $('fileInput');
+dz.addEventListener('click', ()=>fi.click());
+dz.addEventListener('keydown', e=>{if(e.key==='Enter'||e.key===' ')fi.click();});
+dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+dz.addEventListener('drop', e=>{
+  e.preventDefault();dz.classList.remove('drag');
+  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fi.addEventListener('change', ()=>{ if(fi.files[0]) handleFile(fi.files[0]); });
+
+function handleFile(file){
+  imageMime = file.type==='image/png' ? 'image/png' : 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = () => {
+    imageBase64 = reader.result.split(',')[1];
+    $('preview').src = reader.result;
+    $('preview').style.display = 'block';
+    $('processBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ================= Flight strip ================= */
+const STAGE_IDS = ['stg-vision','stg-norm','stg-safety','stg-decision'];
+function flightReset(){
+  STAGE_IDS.forEach(id=>{ $(id).classList.remove('run','done'); });
+}
+function flightStart(){
+  $('flight').classList.add('on');
+  $('newEmpty').style.display='none';
+  flightReset();
+  const start = Date.now();
+  clockTimer = setInterval(()=>{
+    $('flightClock').textContent = ((Date.now()-start)/1000).toFixed(1)+'s';
+  },100);
+  let i = 0;
+  $(STAGE_IDS[0]).classList.add('run');
+  stageTimer = setInterval(()=>{
+    if(i < STAGE_IDS.length-1){
+      $(STAGE_IDS[i]).classList.remove('run');
+      $(STAGE_IDS[i]).classList.add('done');
+      i++;
+      $(STAGE_IDS[i]).classList.add('run');
+    }
+  }, 4200);
+}
+function flightLand(){
+  clearInterval(clockTimer); clearInterval(stageTimer);
+  STAGE_IDS.forEach(id=>{ $(id).classList.remove('run'); $(id).classList.add('done'); });
+}
+function flightAbort(){
+  clearInterval(clockTimer); clearInterval(stageTimer);
+  $('flight').classList.remove('on');
+}
+
+/* ================= Process ================= */
+async function processRx(){
+  if(!imageBase64) return;
+  $('processBtn').disabled = true;
+  $('resultArea').innerHTML = '';
+  flightStart();
+
+  try{
+    const body = { imageBase64: imageBase64, mimeType: imageMime };
+    const pid = $('patientSelect').value;
+    if(pid) body.patientId = pid;
+
+    const data = await api('/api/prescriptions/process',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+
+    flightLand();
+    currentCaseId = data.caseId;
+    lastResult = data.result;
+    lastWithDecision = true;
+    $('resultArea').innerHTML = renderResult(data.result, data.caseId, true);
+  }catch(err){
+    flightAbort();
+    $('resultArea').innerHTML =
+      '<div class="status-banner st-REJECTED"><div class="st-icon">🔌</div><div>'+
+      '<h3>'+t('proc_failed_t')+'</h3><p>'+esc(err.message)+t('proc_failed_s')+'</p></div></div>';
+  }finally{
+    $('processBtn').disabled = false;
+  }
+}
+
+/* ================= Render result ================= */
+function renderResult(r, caseId, withDecision){
+  let html = '';
+
+  html += '<div class="status-banner st-'+esc(r.status)+'">'+
+    '<div class="st-icon">'+(STATUS_ICON[r.status]||'🚫')+'</div><div>'+
+    '<h3>'+t('st_'+r.status+'_t')+'</h3><p>'+esc((r.reasons||[]).join(' · '))+'</p>'+
+    (r.processingMs?'<p class="mono" style="font-size:11px">'+(r.processingMs/1000).toFixed(1)+'s · '+(r.tokensUsed||'–')+' tokens</p>':'')+
+    '</div></div>';
+
+  if(r.status==='REJECTED') return html;
+
+  const meds = (r.extraction && r.extraction.medications) || [];
+  if(meds.length){
+    html += '<div class="card">';
+    html += '<div class="section-title">'+t('sec_read')+'</div>';
+    html += '<table><tr><th>'+t('th_drug')+'</th><th>'+t('th_strength')+'</th><th>'+t('th_dose')+'</th><th>'+t('th_freq')+'</th><th>'+t('th_conf')+'</th></tr>';
+    for(const m of meds){
+      const c = Math.round((m.confidence||0)*100);
+      html += '<tr><td><b>'+esc(m.drug_name)+'</b></td><td>'+esc(m.strength||'—')+'</td>'+
+        '<td>'+esc(m.dose||'—')+'</td><td>'+esc(m.frequency||'—')+'</td>'+
+        '<td><div class="conf '+(c<80?'low':'')+'"><div class="conf-bar"><div class="conf-fill" style="width:'+c+'%"></div></div><span class="mono">'+c+'%</span></div></td></tr>';
+    }
+    html += '</table>';
+
+    const norm = r.normalizedMeds || [];
+    if(norm.length){
+      html += '<div class="section-title">'+t('sec_norm')+'</div>';
+      html += '<table><tr><th>'+t('th_written')+'</th><th>'+t('th_generic')+'</th><th>'+t('th_source')+'</th></tr>';
+      for(const n of norm){
+        const chip = n.method==='rxnorm' ? '<span class="chip chip-rxnorm">RxNorm</span>' :
+                     n.method==='qwen_fallback' ? '<span class="chip chip-qwen">Qwen</span>' :
+                     '<span class="chip chip-unresolved">'+t('chip_unresolved')+'</span>';
+        html += '<tr><td>'+esc(n.original)+'</td><td><b>'+esc((n.generics||[]).join(' + '))+'</b></td><td>'+chip+'</td></tr>';
+      }
+      html += '</table>';
+    }
+
+    const ix = r.interactions || [];
+    html += '<div class="section-title">'+t('sec_ix')+'</div>';
+    if(ix.length===0){
+      html += '<p style="font-size:13px;color:var(--rx-muted)">'+t('no_ix')+'</p>';
+    }else{
+      for(const i of ix){
+        html += '<div class="ix-card sev-'+esc(i.severity)+'">'+
+          '<div class="ix-head"><span class="ix-drugs">'+esc(i.drug1)+' ⚡ '+esc(i.drug2)+'</span>'+
+          '<span class="ix-sev">'+t('sev_'+i.severity)+' · '+esc(i.severity).toUpperCase()+'</span></div>'+
+          '<p><b>'+t('lbl_risk')+':</b> '+esc(i.risk)+'</p>'+
+          '<p><b>'+t('lbl_mech')+':</b> '+esc(i.mechanism)+'</p>'+
+          '<p><b>'+t('lbl_action')+':</b> '+esc(i.action)+'</p></div>';
+      }
+    }
+
+    const al = r.allergyHits || [];
+    if(al.length){
+      html += '<div class="section-title">'+t('sec_allergy')+'</div>';
+      for(const a of al){
+        html += '<div class="ix-card sev-contraindicated">'+
+          '<div class="ix-head"><span class="ix-drugs">'+esc(a.medication)+'</span><span class="ix-sev">'+t('allergy_doc')+'</span></div>'+
+          '<p>'+esc(a.note)+' ('+esc(a.allergy)+')</p></div>';
+      }
+    }
+
+    const fl = r.aiFlags || [];
+    if(fl.length){
+      html += '<div class="section-title">'+t('sec_ai')+'</div>';
+      for(const f of fl){
+        const cls = f.severity==='high'?'sev-major':f.severity==='medium'?'sev-moderate':'';
+        html += '<div class="ix-card '+cls+'">'+
+          '<div class="ix-head"><span class="ix-drugs">'+esc(f.medication)+'</span>'+
+          '<span class="ix-sev">'+esc(f.severity).toUpperCase()+'</span></div>'+
+          '<p><b>'+t('lbl_issue')+':</b> '+esc(f.issue)+'</p>'+
+          '<p><b>'+t('lbl_rec')+':</b> '+esc(f.recommendation)+'</p></div>';
+      }
+    }
+
+    const au = r.audit || [];
+    if(au.length){
+      html += '<div class="section-title">'+t('sec_audit')+'</div>';
+      html += '<div class="audit">';
+      for(const a of au){
+        html += '<div class="audit-row"><span class="t">'+esc((a.at||'').slice(11,19))+'</span>'+
+          '<span class="s">'+esc(a.stage)+'</span><span>'+esc(a.detail)+'</span></div>';
+      }
+      html += '</div>';
+    }
+
+    if(withDecision){
+      html += '<div class="section-title">'+t('sec_decision')+'</div>';
+      html += '<label for="sheetLang" style="margin-top:0">'+t('sheet_lang')+'</label>'+
+        '<select id="sheetLang">'+
+        '<option value="ar"'+(lang==='ar'?' selected':'')+'>'+esc(t('opt_ar'))+'</option>'+
+        '<option value="en"'+(lang==='en'?' selected':'')+'>'+esc(t('opt_en'))+'</option>'+
+        '</select>';
+      html += '<textarea id="decisionNote" rows="2" placeholder="'+esc(t('note_ph'))+'"></textarea>';
+      html += '<div class="decision-bar">'+
+        '<button class="btn btn-ok" onclick="decide(\'APPROVED\')">'+t('btn_approve')+'</button>'+
+        '<button class="btn btn-warn" onclick="openModifyTable()">'+t('btn_modify')+'</button>'+
+        '<button class="btn btn-danger" onclick="decide(\'REJECTED\')">'+t('btn_reject')+'</button>'+
+        '</div>';
+      html += '<div id="modArea"></div>';
+      html += '<div id="decidedMsg"></div>';
+      html += '<div id="outputsArea"></div>';
+    }
+
+    html += '</div>';
+  }
+  return html;
+}
+
+async function decide(decision, finalMeds){
+  if(!currentCaseId) return;
+  try{
+    const note = $('decisionNote') ? $('decisionNote').value : '';
+    const payload = {decision:decision, note:note};
+    if(finalMeds) payload.finalMedications = finalMeds;
+    await api('/api/cases/'+currentCaseId+'/decision',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if($('modArea')) $('modArea').innerHTML = '';
+    const msg = decision==='APPROVED' ? t('msg_approved') :
+                decision==='MODIFIED' ? t('msg_modified') : t('msg_rejected');
+    $('decidedMsg').innerHTML = '<div class="decided">🧑‍⚕️ '+msg+'</div>';
+    document.querySelectorAll('.decision-bar .btn').forEach(b=>b.disabled=true);
+    toast(t('decision_saved'));
+    // After approval, generate the dispensing outputs automatically
+    if(decision==='APPROVED' || decision==='MODIFIED'){
+      const sheetLang = $('sheetLang') ? $('sheetLang').value : lang;
+      generateOutputs(currentCaseId, 'outputsArea', sheetLang);
+    }
+  }catch(err){ toast(t('decision_failed')+err.message); }
+}
+
+/* ================= Dispensing outputs ================= */
+function sheetToHtml(text){
+  const lines = String(text||'').split(/\r?\n/);
+  let out = '';
+  for(const raw of lines){
+    const line = raw.trim();
+    if(!line) continue;
+    if(line.startsWith('##')) out += '<h4>'+esc(line.replace(/^#+\s*/,''))+'</h4>';
+    else if(line.startsWith('- ')||line.startsWith('* ')) out += '<p>• '+esc(line.slice(2))+'</p>';
+    else out += '<p>'+esc(line)+'</p>';
+  }
+  return out;
+}
+
+function renderOutputsHtml(outputs){
+  let html = '<div class="section-title">'+t('sec_outputs')+'</div>';
+  for(const l of (outputs.labels||[])){
+    html += '<div class="label-card">'+
+      '<div class="lc-drug">℞ '+esc(l.drug)+(l.generic?' <span class="mono" style="font-size:12px;color:var(--rx-muted)">('+esc(l.generic)+')</span>':'')+'</div>'+
+      '<div class="lc-row"><b>'+t('lc_directions')+':</b> '+esc(l.directions)+'</div>'+
+      '<div class="lc-row"><b>'+t('lc_route')+':</b> '+esc(l.route)+
+      (l.patient?' · <b>'+t('lc_patient')+':</b> '+esc(l.patient):'')+
+      ' · <b>'+t('lc_date')+':</b> '+esc(l.dispensedAt)+'</div>'+
+      '</div>';
+  }
+  const sheetText = outputs.counselingSheet || outputs.counselingSheetAr;
+  if(sheetText){
+    const isEn = outputs.counselingLanguage === 'en';
+    html += '<div class="section-title">'+t('sheet_title')+(isEn?' (English)':' (العربية)')+'</div>';
+    html += '<div class="sheet'+(isEn?' sheet-en':'')+'" dir="'+(isEn?'ltr':'rtl')+'">'+sheetToHtml(sheetText)+'</div>';
+  }
+  html += '<div class="decision-bar"><button class="btn btn-ok" onclick="printOutputs()">'+t('btn_print')+'</button></div>';
+  return html;
+}
+
+/* ================= Modification table (structured, minimal clicks) ================= */
+function medRowHtml(m){
+  m = m || {};
+  return '<tr>'+
+    '<td><input type="text" class="mi-name" value="'+esc(m.drug_name||'')+'" placeholder="Drug name"></td>'+
+    '<td><input type="text" class="mi-strength" value="'+esc(m.strength||'')+'" placeholder="500mg" style="width:80px"></td>'+
+    '<td><input type="text" class="mi-dose" value="'+esc(m.dose||'')+'" placeholder="1 tab" style="width:75px"></td>'+
+    '<td><input type="text" class="mi-freq" value="'+esc(m.frequency||'')+'" placeholder="twice daily" style="width:110px"></td>'+
+    '<td><input type="text" class="mi-dur" value="'+esc(m.duration||'')+'" placeholder="7 days" style="width:80px"></td>'+
+    '<td><button class="mod-remove" onclick="this.closest(\'tr\').remove()" title="Remove">✕</button></td>'+
+    '</tr>';
+}
+
+function openModifyTable(){
+  const area = $('modArea');
+  if(!area || !lastResult) return;
+  const meds = (lastResult.extraction && lastResult.extraction.medications) || [];
+  let html = '<div class="mod-box">';
+  html += '<div class="mod-title">✏️ '+t('mod_title')+'</div>';
+  html += '<table id="modTable"><tr>'+
+    '<th>'+t('th_drug')+'</th><th>'+t('th_strength')+'</th><th>'+t('th_dose')+'</th>'+
+    '<th>'+t('th_freq')+'</th><th>'+t('th_duration')+'</th><th></th></tr>';
+  for(const m of meds) html += medRowHtml(m);
+  html += '</table>';
+  html += '<div class="mod-actions">'+
+    '<button class="btn" style="background:#fff;border:1px solid var(--rx-line)" onclick="modAddRow()">'+t('mod_add')+'</button>'+
+    '<button class="btn btn-ok" onclick="submitModified()">'+t('mod_confirm')+'</button>'+
+    '<button class="btn" style="background:#fff;border:1px solid var(--rx-line)" onclick="$(\'modArea\').innerHTML=\'\'">'+t('mod_cancel')+'</button>'+
+    '</div></div>';
+  area.innerHTML = html;
+  area.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function modAddRow(){
+  const table = $('modTable');
+  if(table) table.insertAdjacentHTML('beforeend', medRowHtml());
+}
+
+function submitModified(){
+  const rows = document.querySelectorAll('#modTable tr');
+  const finalMeds = [];
+  for(const row of rows){
+    const nameEl = row.querySelector('.mi-name');
+    if(!nameEl) continue; // header row
+    const name = nameEl.value.trim();
+    if(!name && !row.querySelector('.mi-dose').value.trim()) continue; // fully empty row: skip
+    if(!name){ toast(t('med_name_required')); nameEl.focus(); return; }
+    finalMeds.push({
+      drug_name: name,
+      strength: row.querySelector('.mi-strength').value.trim() || null,
+      dose: row.querySelector('.mi-dose').value.trim() || null,
+      frequency: row.querySelector('.mi-freq').value.trim() || null,
+      duration: row.querySelector('.mi-dur').value.trim() || null,
+      route: 'oral'
+    });
+  }
+  if(finalMeds.length === 0){ toast(t('med_name_required')); return; }
+  decide('MODIFIED', finalMeds);
+}
+
+let lastOutputs = null;
+
+async function generateOutputs(caseId, targetId, language){
+  const target = $(targetId);
+  if(!target) return;
+  target.innerHTML = '<div class="outputs-loading">⏳ '+t('outputs_loading')+'</div>';
+  try{
+    const data = await api('/api/cases/'+caseId+'/outputs',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ language: language || lang })
+    });
+    lastOutputs = data.outputs;
+    target.innerHTML = renderOutputsHtml(data.outputs);
+  }catch(err){
+    target.innerHTML = '<div class="outputs-loading">'+t('outputs_failed')+esc(err.message)+'</div>';
+  }
+}
+
+function printOutputs(){
+  if(!lastOutputs) return;
+  const pa = $('printArea');
+
+  // The printed paper belongs to the PATIENT -> use the counseling
+  // sheet language for everything on it, regardless of the UI language.
+  const pl = lastOutputs.counselingLanguage === 'en' ? 'en' : 'ar';
+  const PR = {
+    ar: { meds:'أدويتك — كيفية تناولها', drug:'الدواء', how:'الجرعة وطريقة التناول',
+          patient:'المريض', date:'التاريخ',
+          foot:'أُعدت هذه الورقة تحت إشراف الصيدلي — عند أي استفسار تواصل مع الصيدلية' },
+    en: { meds:'Your medications — how to take them', drug:'Medication', how:'Dose & how to take it',
+          patient:'Patient', date:'Date',
+          foot:'Prepared under pharmacist supervision — contact your pharmacy with any questions' }
+  }[pl];
+
+  const labels = lastOutputs.labels || [];
+  const patientName = labels.length && labels[0].patient ? labels[0].patient : null;
+  const dispDate = labels.length ? labels[0].dispensedAt : new Date().toISOString().slice(0,10);
+
+  let html = '';
+  // Compact header line
+  html += '<div class="pr-head"><span class="pr-brand">℞ RxPilot</span>'+
+    '<span class="pr-meta">'+
+    (patientName ? '<b>'+PR.patient+':</b> '+esc(patientName)+' · ' : '')+
+    '<b>'+PR.date+':</b> '+esc(dispDate)+'</span></div>';
+
+  // Hero: the medication table (what to take, how much, how often)
+  html += '<table class="pr-meds"><tr><th>'+PR.meds.split(' — ')[0]+'</th><th>'+PR.how+'</th></tr>';
+  for(const l of labels){
+    html += '<tr><td class="pr-drug">'+esc(l.drug)+'</td>'+
+      '<td class="pr-dir">'+esc(l.directions)+'</td></tr>';
+  }
+  html += '</table>';
+
+  // Reference: the counseling content, compact
+  const sheetText = lastOutputs.counselingSheet || lastOutputs.counselingSheetAr || '';
+  if(sheetText){
+    html += '<div class="pr-sheet">'+sheetToHtml(sheetText)+'</div>';
+  }
+
+  html += '<div class="pr-foot">'+PR.foot+'</div>';
+
+  pa.dir = pl === 'en' ? 'ltr' : 'rtl';
+  pa.innerHTML = html;
+  window.print();
+}
+
+/* ================= Cases view ================= */
+async function loadCases(){
+  try{
+    const data = await api('/api/cases');
+    const cases = data.cases || [];
+    $('casesCount').textContent = cases.length;
+    if(!cases.length){
+      $('casesList').innerHTML = '<div class="empty">'+t('cases_empty')+'</div>';
+      return;
+    }
+    $('casesList').innerHTML = cases.map(c=>{
+      const st = c.result ? c.result.status : '—';
+      const dec = c.pharmacistDecision ? ' · '+t('pharm_decision')+': '+c.pharmacistDecision : '';
+      return '<div class="list-row" onclick="openCase(\''+esc(c.id)+'\')">'+
+        '<div><b class="mono" style="font-size:13px">'+esc(c.id)+'</b>'+
+        '<div class="meta">'+esc((c.createdAt||'').replace('T',' ').slice(0,19))+esc(dec)+'</div></div>'+
+        '<span class="chip chip-'+esc(st)+'">'+esc(st)+'</span></div>';
+    }).join('');
+  }catch(err){
+    $('casesList').innerHTML = '<div class="empty">'+t('load_cases_failed')+esc(err.message)+'</div>';
+  }
+}
+
+async function openCase(id){
+  try{
+    const data = await api('/api/cases/'+id);
+    currentCaseId = id;
+    const withDecision = !data.case.pharmacistDecision;
+    lastResult = data.case.result;
+    lastWithDecision = withDecision;
+    let html = renderResult(data.case.result, id, withDecision);
+    if(data.case.pharmacistDecision){
+      html += '<div class="decided">🧑‍⚕️ '+t('pharm_decision')+': <b>'+esc(data.case.pharmacistDecision)+'</b>'+
+        (data.case.pharmacistNote?' — '+esc(data.case.pharmacistNote):'')+'</div>';
+    }
+    // Dispensing outputs: show cached ones, or offer generation for approved cases
+    if(data.case.dispensingOutputs){
+      lastOutputs = data.case.dispensingOutputs;
+      html += renderOutputsHtml(data.case.dispensingOutputs);
+    } else if(['APPROVED','MODIFIED'].includes(data.case.pharmacistDecision)){
+      html += '<div id="caseOutputsArea"><div class="decision-bar">'+
+        '<button class="btn btn-ok" onclick="generateOutputs(\''+esc(id)+'\',\'caseOutputsArea\', lang)">'+t('btn_gen_outputs')+'</button>'+
+        '</div></div>';
+    }
+    $('caseDetail').innerHTML = html;
+    $('caseDetail').scrollIntoView({behavior:'smooth'});
+  }catch(err){ toast(t('open_case_failed')+err.message); }
+}
+
+/* ================= Patients view ================= */
+async function loadPatients(){
+  try{
+    const data = await api('/api/patients');
+    const list = data.patients || [];
+    $('patientsCount').textContent = list.length;
+
+    const sel = $('patientSelect');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">'+esc(t('no_patient'))+'</option>' +
+      list.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+(p.age?' ('+esc(p.age)+' '+t('years')+')':'')+'</option>').join('');
+    sel.value = current;
+
+    if(!list.length){
+      $('patientsList').innerHTML = '<div class="empty">'+t('patients_empty')+'</div>';
+      return;
+    }
+    $('patientsList').innerHTML = list.map(p=>{
+      return '<div class="list-row" style="cursor:default">'+
+        '<div><b>'+esc(p.name)+'</b>'+(p.age?' · '+esc(p.age)+' '+t('years'):'')+
+        '<div class="meta">'+t('p_meds')+': '+esc((p.currentMedications||[]).join(', ')||'—')+
+        ' · '+t('p_allergies')+': '+esc((p.allergies||[]).join(', ')||'—')+'</div></div>'+
+        '<span class="chip chip-rxnorm mono" style="font-size:11px">'+esc(p.id)+'</span></div>';
+    }).join('');
+  }catch(err){
+    $('patientsList').innerHTML = '<div class="empty">'+t('load_patients_failed')+esc(err.message)+'</div>';
+  }
+}
+
+async function addPatient(){
+  const name = $('pName').value.trim();
+  if(!name){ toast(t('name_required')); return; }
+  const split = v => v.split(',').map(s=>s.trim()).filter(Boolean);
+  try{
+    await api('/api/patients',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name: name,
+        age: $('pAge').value || null,
+        currentMedications: split($('pMeds').value),
+        allergies: split($('pAllergies').value),
+        conditions: split($('pConditions').value)
+      })
+    });
+    ['pName','pAge','pMeds','pAllergies','pConditions'].forEach(id=>$(id).value='');
+    toast(t('patient_saved'));
+    loadPatients();
+  }catch(err){ toast(t('save_failed')+err.message); }
+}
+
+/* ================= Init ================= */
+applyLang();
+loadPatients();
+</script>
+</body>
+</html>

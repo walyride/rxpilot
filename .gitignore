@@ -14,3 +14,9 @@ Thumbs.db
 
 # Local uploads during development
 uploads/
+
+# Patient data (never commit - privacy)
+data/
+
+# Pipeline test outputs
+last-case.json
