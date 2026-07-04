@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="985" viewBox="0 0 1300 985" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#40535b"/>
+    </marker>
+    <marker id="arrO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF6A00"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1300" height="985" fill="#f6faf8"/>
+
+  <!-- Title -->
+  <text x="40" y="46" font-size="28" font-weight="700" fill="#0d5c4d">RxPilot — System Architecture</text>
+  <text x="40" y="72" font-size="14" fill="#5b6b70">Global AI Hackathon with Qwen Cloud · Track 4: Autopilot Agent · AI prescription safety with a pharmacist in the loop</text>
+
+  <!-- ================= LEFT: Dashboard ================= -->
+  <rect x="40" y="110" width="360" height="160" rx="12" fill="#ffffff" stroke="#0d5c4d" stroke-width="2.5"/>
+  <text x="60" y="140" font-size="17" font-weight="700" fill="#0d5c4d">Pharmacist Dashboard</text>
+  <text x="60" y="164" font-size="12.5" fill="#40535b">Single-file HTML · Bilingual EN / Arabic (MSA)</text>
+  <text x="60" y="184" font-size="12.5" fill="#40535b">Upload Rx photo · Live pipeline view</text>
+  <text x="60" y="204" font-size="12.5" fill="#40535b">Approve / Reject / Structured modification</text>
+  <text x="60" y="224" font-size="12.5" fill="#40535b">Case log · Patient profiles · Audit view</text>
+  <text x="60" y="252" font-size="11.5" fill="#8a999e">Served as static files by the backend</text>
+
+  <!-- REST arrow (both ways) -->
+  <line x1="400" y1="180" x2="470" y2="180" stroke="#40535b" stroke-width="2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+  <text x="435" y="168" font-size="11.5" fill="#40535b" text-anchor="middle">REST / JSON</text>
+
+  <!-- Patient paper box -->
+  <rect x="40" y="620" width="360" height="120" rx="12" fill="#ffffff" stroke="#0d5c4d" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="60" y="650" font-size="16" font-weight="700" fill="#0d5c4d">Patient</text>
+  <text x="60" y="674" font-size="12.5" fill="#40535b">Receives one printed A4 sheet:</text>
+  <text x="60" y="694" font-size="12.5" fill="#40535b">bold medication table (what &amp; how to take)</text>
+  <text x="60" y="714" font-size="12.5" fill="#40535b">+ counseling notes in Arabic or English</text>
+
+  <!-- Dashboard -> Patient arrow -->
+  <line x1="220" y1="270" x2="220" y2="620" stroke="#40535b" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="212" y="450" font-size="11.5" fill="#40535b" text-anchor="end">A4 print</text>
+
+  <!-- ================= CENTER: Alibaba Cloud container ================= -->
+  <rect x="470" y="110" width="460" height="740" rx="14" fill="#fff8f2" stroke="#FF6A00" stroke-width="3"/>
+  <rect x="470" y="110" width="460" height="56" rx="14" fill="#FF6A00"/>
+  <rect x="470" y="146" width="460" height="20" fill="#FF6A00"/>
+  <text x="700" y="134" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">Alibaba Cloud — Function Compute</text>
+  <text x="700" y="156" font-size="12" fill="#ffe9d6" text-anchor="middle">Node.js + Express · RxPilot backend (serverless)</text>
+
+  <!-- Step 1 -->
+  <rect x="500" y="192" width="400" height="72" rx="10" fill="#ffffff" stroke="#7b5cd6" stroke-width="2"/>
+  <text x="518" y="216" font-size="14" font-weight="700" fill="#152128">1 · Vision — Qwen3-VL</text>
+  <text x="518" y="236" font-size="11.5" fill="#40535b">Reads handwritten prescription (AR/EN)</text>
+  <text x="518" y="252" font-size="11.5" fill="#40535b">→ structured JSON + per-field confidence</text>
+  <line x1="700" y1="264" x2="700" y2="288" stroke="#40535b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Step 2 -->
+  <rect x="500" y="290" width="400" height="72" rx="10" fill="#ffffff" stroke="#2b6cb0" stroke-width="2"/>
+  <text x="518" y="314" font-size="14" font-weight="700" fill="#152128">2 · Drug Name Normalization</text>
+  <text x="518" y="334" font-size="11.5" fill="#40535b">Brand → generic via RxNorm (approx. match)</text>
+  <text x="518" y="350" font-size="11.5" fill="#40535b">Qwen fallback for local market brands</text>
+  <line x1="700" y1="362" x2="700" y2="386" stroke="#40535b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Step 3 -->
+  <rect x="500" y="388" width="400" height="96" rx="10" fill="#ffffff" stroke="#b3261e" stroke-width="2"/>
+  <text x="518" y="412" font-size="14" font-weight="700" fill="#152128">3 · Safety Engine (three layers)</text>
+  <text x="518" y="432" font-size="11.5" fill="#40535b">• Curated interaction table — clinically reviewed, deterministic</text>
+  <text x="518" y="448" font-size="11.5" fill="#40535b">• Allergy check vs patient memory</text>
+  <text x="518" y="464" font-size="11.5" fill="#40535b">• AI clinical review (Qwen): doses, duplication, red flags</text>
+  <line x1="700" y1="484" x2="700" y2="508" stroke="#40535b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Step 4 -->
+  <rect x="500" y="510" width="400" height="90" rx="10" fill="#fffdf5" stroke="#b45309" stroke-width="2.5"/>
+  <text x="518" y="534" font-size="14" font-weight="700" fill="#152128">4 · Decision Gate — Human-in-the-loop</text>
+  <text x="518" y="554" font-size="11.5" fill="#40535b">BLOCKED · NEEDS_REVIEW · CLEARED</text>
+  <text x="518" y="570" font-size="11.5" fill="#40535b">Pharmacist approves, rejects, or edits the final list</text>
+  <text x="518" y="586" font-size="11.5" fill="#40535b">(structured modification = single source of truth)</text>
+  <line x1="700" y1="600" x2="700" y2="624" stroke="#40535b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Step 5 -->
+  <rect x="500" y="626" width="400" height="72" rx="10" fill="#ffffff" stroke="#1a7f4b" stroke-width="2"/>
+  <text x="518" y="650" font-size="14" font-weight="700" fill="#152128">5 · Dispensing Outputs</text>
+  <text x="518" y="670" font-size="11.5" fill="#40535b">Deterministic labels (legal document — no AI)</text>
+  <text x="518" y="686" font-size="11.5" fill="#40535b">Counseling sheet AR/EN via Qwen · cached once</text>
+
+  <!-- Bottom row: memory + audit -->
+  <line x1="600" y1="698" x2="600" y2="730" stroke="#40535b" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="800" y1="698" x2="800" y2="730" stroke="#40535b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="500" y="732" width="192" height="96" rx="10" fill="#eef5f2" stroke="#0d5c4d" stroke-width="2"/>
+  <text x="596" y="756" font-size="13" font-weight="700" fill="#0d5c4d" text-anchor="middle">Patient Memory</text>
+  <text x="596" y="776" font-size="10.5" fill="#40535b" text-anchor="middle">Profiles · current meds · allergies</text>
+  <text x="596" y="792" font-size="10.5" fill="#40535b" text-anchor="middle">Cases + pharmacist decisions</text>
+  <text x="596" y="812" font-size="10" fill="#8a999e" text-anchor="middle">JSON store — Tablestore-ready</text>
+
+  <rect x="708" y="732" width="192" height="96" rx="10" fill="#152128" stroke="#152128" stroke-width="2"/>
+  <text x="804" y="756" font-size="13" font-weight="700" fill="#ffd479" text-anchor="middle">Audit Trail</text>
+  <text x="804" y="776" font-size="10.5" fill="#c9d6da" text-anchor="middle">Every step timestamped:</text>
+  <text x="804" y="792" font-size="10.5" fill="#c9d6da" text-anchor="middle">reads, checks, decisions,</text>
+  <text x="804" y="808" font-size="10.5" fill="#c9d6da" text-anchor="middle">modifications, outputs</text>
+
+  <!-- Memory feedback to safety engine -->
+  <path d="M 500 780 L 452 780 L 452 436 L 500 436" fill="none" stroke="#0d5c4d" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+  <text x="446" y="600" font-size="10.5" fill="#0d5c4d" text-anchor="end" transform="rotate(-90 446 600)">memory feeds safety checks</text>
+
+  <!-- ================= RIGHT: External services ================= -->
+  <!-- Qwen bus -->
+  <line x1="900" y1="228" x2="945" y2="228" stroke="#7b5cd6" stroke-width="2"/>
+  <line x1="900" y1="450" x2="945" y2="450" stroke="#7b5cd6" stroke-width="2"/>
+  <line x1="900" y1="662" x2="945" y2="662" stroke="#7b5cd6" stroke-width="2"/>
+  <line x1="945" y1="662" x2="945" y2="228" stroke="#7b5cd6" stroke-width="2"/>
+  <line x1="945" y1="262" x2="988" y2="262" stroke="#7b5cd6" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="990" y="192" width="270" height="150" rx="12" fill="#ffffff" stroke="#7b5cd6" stroke-width="2.5"/>
+  <text x="1010" y="220" font-size="16" font-weight="700" fill="#7b5cd6">Qwen Cloud</text>
+  <text x="1010" y="244" font-size="12" fill="#40535b">qwen-vl-plus — vision (handwriting)</text>
+  <text x="1010" y="264" font-size="12" fill="#40535b">qwen-plus — clinical reasoning,</text>
+  <text x="1010" y="280" font-size="12" fill="#40535b">brand fallback, counseling AR/EN</text>
+  <text x="1010" y="306" font-size="11" fill="#8a999e">OpenAI-compatible endpoint</text>
+  <text x="1010" y="322" font-size="11" fill="#8a999e">API key via environment variable</text>
+
+  <!-- RxNorm arrow: crosses the bus -->
+  <path d="M 900 330 L 966 330 L 966 470 L 988 470" fill="none" stroke="#2b6cb0" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="990" y="420" width="270" height="110" rx="12" fill="#ffffff" stroke="#2b6cb0" stroke-width="2.5"/>
+  <text x="1010" y="448" font-size="16" font-weight="700" fill="#2b6cb0">RxNorm API</text>
+  <text x="1010" y="472" font-size="12" fill="#40535b">U.S. National Library of Medicine</text>
+  <text x="1010" y="492" font-size="12" fill="#40535b">Name → RxCUI → generic ingredient</text>
+  <text x="1010" y="512" font-size="11" fill="#8a999e">Free public terminology service</text>
+
+  <!-- GitHub box -->
+  <rect x="990" y="570" width="270" height="90" rx="12" fill="#ffffff" stroke="#40535b" stroke-width="2"/>
+  <text x="1010" y="598" font-size="15" font-weight="700" fill="#152128">Open Source</text>
+  <text x="1010" y="620" font-size="12" fill="#40535b">github.com/walyride/rxpilot</text>
+  <text x="1010" y="640" font-size="12" fill="#40535b">MIT License</text>
+
+  <!-- Qwen bus label -->
+  <text x="953" y="180" font-size="11.5" font-weight="600" fill="#7b5cd6">Qwen API calls</text>
+
+  <!-- ================= Legend ================= -->
+  <rect x="40" y="880" width="1220" height="78" rx="10" fill="#ffffff" stroke="#d7e4df" stroke-width="1.5"/>
+  <rect x="62" y="898" width="16" height="16" rx="4" fill="#ffffff" stroke="#0d5c4d" stroke-width="2.5"/>
+  <text x="86" y="911" font-size="12" fill="#40535b">RxPilot application</text>
+  <rect x="230" y="898" width="16" height="16" rx="4" fill="#fff8f2" stroke="#FF6A00" stroke-width="2.5"/>
+  <text x="254" y="911" font-size="12" fill="#40535b">Alibaba Cloud infrastructure</text>
+  <rect x="450" y="898" width="16" height="16" rx="4" fill="#ffffff" stroke="#7b5cd6" stroke-width="2.5"/>
+  <text x="474" y="911" font-size="12" fill="#40535b">Qwen models</text>
+  <rect x="600" y="898" width="16" height="16" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="2.5"/>
+  <text x="624" y="911" font-size="12" fill="#40535b">External medical data</text>
+  <rect x="790" y="898" width="16" height="16" rx="4" fill="#fffdf5" stroke="#b45309" stroke-width="2.5"/>
+  <text x="814" y="911" font-size="12" fill="#40535b">Human-in-the-loop checkpoint</text>
+  <text x="650" y="942" font-size="11.5" fill="#8a999e" text-anchor="middle">RxPilot · Interaction rules clinically reviewed by a clinical pharmacy student · github.com/walyride/rxpilot</text>
+</svg>
