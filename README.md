@@ -39,8 +39,8 @@ That last part is the point of the whole system: **the printed label can never d
 
 ## Architecture
 
-- **Backend:** Node.js + Express, deployed on **Alibaba Cloud Function Compute** (serverless)
-- **AI:** Qwen3-VL (vision) and Qwen text models via the Qwen Cloud OpenAI-compatible API
+- **AI layer — Alibaba Cloud:** RxPilot's entire AI layer runs on **Alibaba Cloud Model Studio (DashScope)**, Alibaba Cloud's managed large-model platform. Every prescription makes live inference calls to Alibaba Cloud — **Qwen3-VL** for reading handwriting and **Qwen** text models for clinical reasoning, brand-name resolution, and bilingual counseling. Integration is documented in [`src/alibaba-cloud-integration.js`](src/alibaba-cloud-integration.js).
+- **Backend:** Node.js + Express (serverless-ready for Alibaba Cloud Function Compute)
 - **Drug data:** RxNorm (U.S. National Library of Medicine)
 - **Frontend:** a single-file bilingual dashboard (English / Arabic, full RTL support) served as static files by the backend
 - **Storage:** JSON file store behind a clean interface, designed to swap to Alibaba Cloud Tablestore without touching any other module
