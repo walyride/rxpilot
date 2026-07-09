@@ -43,8 +43,8 @@
   <rect x="470" y="110" width="460" height="740" rx="14" fill="#fff8f2" stroke="#FF6A00" stroke-width="3"/>
   <rect x="470" y="110" width="460" height="56" rx="14" fill="#FF6A00"/>
   <rect x="470" y="146" width="460" height="20" fill="#FF6A00"/>
-  <text x="700" y="134" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">Alibaba Cloud — Function Compute</text>
-  <text x="700" y="156" font-size="12" fill="#ffe9d6" text-anchor="middle">Node.js + Express · RxPilot backend (serverless)</text>
+  <text x="700" y="134" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">Alibaba Cloud — Model Studio</text>
+  <text x="700" y="156" font-size="12" fill="#ffe9d6" text-anchor="middle">Qwen models via DashScope · Node.js + Express backend</text>
 
   <!-- Step 1 -->
   <rect x="500" y="192" width="400" height="72" rx="10" fill="#ffffff" stroke="#7b5cd6" stroke-width="2"/>
@@ -147,5 +147,5 @@
   <text x="624" y="911" font-size="12" fill="#40535b">External medical data</text>
   <rect x="790" y="898" width="16" height="16" rx="4" fill="#fffdf5" stroke="#b45309" stroke-width="2.5"/>
   <text x="814" y="911" font-size="12" fill="#40535b">Human-in-the-loop checkpoint</text>
-  <text x="650" y="942" font-size="11.5" fill="#8a999e" text-anchor="middle">RxPilot · Interaction rules clinically reviewed by a clinical pharmacy student · github.com/walyride/rxpilot</text>
+  <text x="650" y="942" font-size="11.5" fill="#8a999e" text-anchor="middle">RxPilot · Interaction rules clinically reviewed by a pharmacist · github.com/walyride/rxpilot</text>
 </svg>
